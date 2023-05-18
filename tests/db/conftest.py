@@ -2,6 +2,16 @@ import pytest
 
 
 @pytest.fixture
+def test_json_urls():
+    return [
+        "https://project-open-data.cio.gov/v1.1/schema/catalog.json",
+        "https://data.wa.gov/api/views/f6w7-q2d2/columns.json",
+        "https://project-open-data.cio.gov/v1.1/schema/catalog.json",
+        "https://healthdata.gov/data.json",
+    ]
+
+
+@pytest.fixture
 def test_table_name():
     return "test_table"
 
