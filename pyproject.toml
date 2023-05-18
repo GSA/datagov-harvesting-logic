@@ -9,6 +9,9 @@ packages = [{include = "datagovharvester"}]
 [tool.poetry.dependencies]
 python = ">=3.9"
 jsonschema = "^4.17.3"
+psycopg2 = "^2.9.6"
+redis = "^4.5.5"
+celery = "^5.2.7"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.0"
