@@ -6,6 +6,7 @@ pytest-coverage.txt
 __pycache__/
 venv/
 tmp/
+.ruff_cache/
 
 # previous versions of schemas
 **/catalog_**.json
