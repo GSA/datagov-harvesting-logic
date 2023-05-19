@@ -1,7 +1,5 @@
 import os
 import psycopg2
-import requests
-from tests.db.celery.tasks import download_json
 from dotenv import load_dotenv
 from .celery.tasks import download_json
 
