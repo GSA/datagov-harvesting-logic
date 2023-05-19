@@ -3,5 +3,5 @@ import requests
 
 
 @app.task
-def fetch_json(url):
+def download_json(url):
     return requests.get(url).json()
