@@ -41,9 +41,6 @@ jobs:
       - name: Setup services
         run: docker-compose up -d
 
-      - name: Setup celery worker
-        run: poetry run celery -A tests.db.celery worker --detach
-
       - name: Run Pytest
         run: poetry run pytest -s --junitxml=pytest.xml --cov=datagovharvester | tee pytest-coverage.txt
 

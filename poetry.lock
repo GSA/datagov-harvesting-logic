@@ -571,6 +571,21 @@ tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "xmlschema"]
 
 [[package]]
+name = "pytest-celery"
+version = "0.0.0"
+description = "pytest-celery a shim pytest plugin to enable celery.contrib.pytest"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pytest-celery-0.0.0.tar.gz", hash = "sha256:cfd060fc32676afa1e4f51b2938f903f7f75d952186b8c6cf631628c4088f406"},
+    {file = "pytest_celery-0.0.0-py2.py3-none-any.whl", hash = "sha256:63dec132df3a839226ecb003ffdbb0c2cb88dd328550957e979c942766578060"},
+]
+
+[package.dependencies]
+celery = ">=4.4.0"
+
+[[package]]
 name = "pytest-cov"
 version = "4.0.0"
 description = "Pytest plugin for measuring coverage."
@@ -753,4 +768,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9"
-content-hash = "c5d2aef3f44bbb254af81c3675412d7afe7c19bcc87e9ef02628cffab5ba5b7a"
+content-hash = "c28798fcfce8600928b7fb10278c47a4f066661a6dc33d435e6129c6a5af1160"

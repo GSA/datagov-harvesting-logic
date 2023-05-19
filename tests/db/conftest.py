@@ -1,4 +1,5 @@
 import pytest
+from celery.contrib.pytest import celery_app, celery_worker
 
 
 @pytest.fixture
