@@ -12,5 +12,5 @@ app = Celery(
     "harvester",
     broker=broker_url,
     backend=broker_url,
-    include=["tests.db.celery.tasks"],
+    include=[".tasks"],
 )
