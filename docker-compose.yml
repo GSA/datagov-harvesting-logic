@@ -22,7 +22,7 @@ services:
     ports:
       - "6379:6379"
 
-  db:
+  postgres:
     env_file:
       - .env
     image: postgres
