@@ -1,10 +1,10 @@
 import os
 import psycopg2
-from dotenv import load_dotenv, find_dotenv
+# from dotenv import load_dotenv
 from .celery.tasks import download_json
 # from celery.contrib.pytest import celery_app, celery_session_worker
 
-load_dotenv()
+# load_dotenv()
 
 
 def test_celery_task(test_json_urls):
