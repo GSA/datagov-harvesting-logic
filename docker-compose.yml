@@ -37,7 +37,7 @@ services:
       - .env
     build:
       context: .
-    command: poetry run pytest -s --junitxml=pytest.xml --cov=datagovharvester | tee pytest-coverage.txt
+    command: poetry run pytest # -s --junitxml=pytest.xml --cov=datagovharvester | tee pytest-coverage.txt
     volumes:
       - ./.env:/app/.env
       - .:/app
