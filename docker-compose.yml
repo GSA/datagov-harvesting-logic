@@ -23,16 +23,17 @@ services:
       - "6379:6379"
 
   db:
+    container_name: db
     env_file:
       - .env
     image: postgres
-    expose:
-      - "5432"
-    # ports:
-    #   - "5432:5432"
+    ports:
+      - "5432:5432"
+    networks:
+      - testnetwork
     volumes:
       - pg_data:/var/lib/postgresql/data
-    
+        
   pytest:
     image: harvestingtest:latest
     env_file:
@@ -43,10 +44,17 @@ services:
     volumes:
       - ./.env:/app/.env
       - .:/app
+    links:
+      - db
     depends_on:
       - db
       - redis
+    networks:
+      - testnetwork
 
+networks:
+  testnetwork:
+    driver: bridge
 
 volumes:
   pg_data:
