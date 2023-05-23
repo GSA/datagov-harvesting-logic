@@ -25,9 +25,9 @@ def test_create_table(create_test_table_sql, get_test_table_sql):
     #         }
 
     config_file = { 
-        "host": "db", 
+        "host": "db",
         "user": "postgres_user",
-        "password": "postgres_password"
+        "password": "test_password"
     }
 
     try:
