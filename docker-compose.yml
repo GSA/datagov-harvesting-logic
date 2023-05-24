@@ -29,13 +29,6 @@ services:
     image: postgres
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
-      interval: 30s
-      timeout: 60s
-      retries: 5
-    networks:
-      - testnetwork
     volumes:
       - pg_data:/var/lib/postgresql/data
         
@@ -45,21 +38,13 @@ services:
       - .env
     build:
       context: .
-    command: poetry run pytest # -s --junitxml=pytest.xml --cov=datagovharvester | tee pytest-coverage.txt
+    command: poetry run pytest -s --junitxml=pytest.xml --cov=datagovharvester | tee pytest-coverage.txt
     volumes:
       - ./.env:/app/.env
       - .:/app
-    links:
-      - db
     depends_on:
       - db
       - redis
-    networks:
-      - testnetwork
-
-networks:
-  testnetwork:
-    driver: bridge
 
 volumes:
   pg_data:
