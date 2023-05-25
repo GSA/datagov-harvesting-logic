@@ -40,7 +40,6 @@ services:
       context: .
     command: poetry run pytest -s --junitxml=pytest.xml --cov=datagovharvester | tee pytest-coverage.txt
     volumes:
-      - ./.env:/app/.env
       - .:/app
     depends_on:
       - db
