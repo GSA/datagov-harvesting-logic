@@ -2,7 +2,7 @@ import requests
 import xml.etree.ElementTree as ET
 
 
-def translate_mbjson_to_iso():
+def translate_fgdc_to_iso():
     # download xml or parse local file
     xml_data = ET.parse("path_to_xml")
 
