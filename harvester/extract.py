@@ -74,12 +74,18 @@ def download_waf(files):
     return output
 
 
-def extract(harvest_source) -> list:
+def extract(harvest_source: dict, waf_options: dict = {}) -> list:
     """Extracts all records from a harvest_source"""
     logger.info("Hello from harvester.extract()")
 
     datasets = []
 
-    # stub
+    if harvest_source["type"] == "dcatus":
+        datasets += download_dcatus_catalog(harvest_source["url"])["dataset"]
+    elif harvest_source["type"] == "waf":
+        files = traverse_waf(harvest_source["url"], **waf_options)
+        datasets += [f["content"] for f in download_waf(files)]
+    else:  # whatever else we need?
+        pass
 
     return datasets
