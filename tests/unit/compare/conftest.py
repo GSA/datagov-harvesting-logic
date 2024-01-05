@@ -30,61 +30,33 @@ def artificial_data_sources():
 
 @pytest.fixture
 def data_sources():
-    harvest_source_datasets = open_json(
-        HARVEST_SOURCES / "dcatus" / "dcatus_compare.json"
-    )["dataset"]
+    harvest_source = open_json(HARVEST_SOURCES / "dcatus" / "dcatus_compare.json")[
+        "dataset"
+    ]
 
-    harvest_source = {}
-    for d in harvest_source_datasets:
-        harvest_source[d["identifier"]] = dataset_to_hash(
-            sort_dataset(d)
-        )  # the extract needs to be sorted
-
-    ckan_source_datasets = open_json(
-        HARVEST_SOURCES / "dcatus" / "ckan_datasets_resp.json"
-    )["result"]["results"]
-
-    ckan_source = {}
-
-    for d in ckan_source_datasets:
-        orig_meta = None
-        orig_id = None
-        for e in d["extras"]:
-            if e["key"] == "dcat_metadata":
-                orig_meta = eval(e["value"], {"__builtins__": {}})
-            if e["key"] == "identifier":
-                orig_id = e["value"]
-
-        ckan_source[orig_id] = dataset_to_hash(
-            orig_meta
-        )  # the response is stored sorted
+    ckan_source = open_json(HARVEST_SOURCES / "dcatus" / "ckan_datasets_resp.json")[
+        "result"
+    ]["results"]
 
     return harvest_source, ckan_source
 
 
 @pytest.fixture
-def data_sources_raw():
-    harvest_source_datasets = open_json(
-        HARVEST_SOURCES / "dcatus" / "dcatus_compare.json"
-    )["dataset"]
+def data_sources_id_metadata(data_sources):
+    """converts the input harvest and ckan sources to { identifier: metadata } format"""
+    harvest_source, ckan_source = data_sources
 
-    harvest_source = {d["identifier"]: d for d in harvest_source_datasets}
+    harvest_datasets = {d["identifier"]: d for d in harvest_source}
 
-    ckan_source_datasets = open_json(
-        HARVEST_SOURCES / "dcatus" / "ckan_datasets_resp.json"
-    )["result"]["results"]
+    ckan_datasets = {}
 
-    ckan_source = {}
-
-    for d in ckan_source_datasets:
-        orig_meta = None
-        orig_id = None
+    for d in ckan_source:
+        oid, meta = None, None
         for e in d["extras"]:
             if e["key"] == "dcat_metadata":
-                orig_meta = eval(e["value"], {"__builtins__": {}})
+                meta = eval(e["value"], {"__builtins__": {}})
             if e["key"] == "identifier":
-                orig_id = e["value"]
+                oid = e["value"]
+        ckan_datasets[oid] = meta  # ckan datasets will always be stored sorted
 
-        ckan_source[orig_id] = orig_meta
-
-    return harvest_source, ckan_source
+    return harvest_datasets, ckan_datasets
