@@ -20,19 +20,14 @@ def parse_errors(errors):
     return error_message
 
 
-def validate_json_schema(json_data, dataset_schema):
-    success = None
-    error_message = ""
-
+def validate_json_schema(record, dataset_schema):
     validator = Draft202012Validator(dataset_schema)
 
     try:
-        validator.validate(json_data)
-        success = True
-        error_message = "no errors"
-    except ValidationError:
-        success = False
-        errors = validator.iter_errors(json_data)
-        error_message = parse_errors(errors)
+        validator.validate(record.record)
+        record.valid = True
+    except Exception as e:
+        record.value = False
+        # do something with the exception
 
-    return success, error_message
+    return record
