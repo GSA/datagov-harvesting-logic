@@ -1,4 +1,9 @@
-from harvester.extract import download_dcatus_catalog
+from harvester.extract import download_dcatus_catalog, extract
+
+
+def test_extract_dcatus_harvest_source(get_dcatus_job):
+    dcatus_catalog = extract({"url": get_dcatus_job, "type": "dcatus"})
+    assert len(dcatus_catalog) > 0
 
 
 def test_extract_dcatus(get_dcatus_job):
