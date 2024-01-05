@@ -1,4 +1,4 @@
-from harvester.compare import compare
+from harvester.compare import compare, convert_datasets_to_id_hash
 from harvester.utils.util import dataset_to_hash, sort_dataset
 
 
@@ -13,15 +13,21 @@ def test_artificial_compare(artificial_data_sources):
 
 
 def test_compare(data_sources):
-    compare_res = compare(*data_sources)
+    harvest_id_hash, ckan_id_hash = convert_datasets_to_id_hash(*data_sources)
+
+    # if they're the same length that's a good sign
+    assert len(harvest_id_hash) == len(data_sources[0])
+    assert len(ckan_id_hash) == len(data_sources[1])
+
+    compare_res = compare(harvest_id_hash, ckan_id_hash)
 
     assert len(compare_res["create"]) == 1
     assert len(compare_res["update"]) == 3
     assert len(compare_res["delete"]) == 1
 
 
-def test_sort(data_sources_raw):
-    harvest_source, ckan_source = data_sources_raw
+def test_sort(data_sources_id_metadata):
+    harvest_source, ckan_source = data_sources_id_metadata
 
     harvest_source_no_sort = harvest_source.copy()
     for k, v in harvest_source_no_sort.items():
