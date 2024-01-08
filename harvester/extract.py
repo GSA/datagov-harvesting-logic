@@ -13,19 +13,9 @@ def download_dcatus_catalog(url):
     url (str)   :   path to the file to be downloaded.
     """
     try:
-        resp = requests.get(url)
-    except RequestException as e:
-        return Exception(e)
-    except JSONDecodeError as e:
-        return Exception(e)
-
-    if resp.status_code != 200:
-        return Exception("non-200 status code")
-
-    try:
-        return resp.json()
-    except JSONDecodeError as e:
-        return Exception(e)
+        return requests.get(url).json()
+    except Exception as e:
+        pass  # do something with the exception
 
 
 def traverse_waf(url, files=[], file_ext=".xml", folder="/", filters=[]):
@@ -74,12 +64,18 @@ def download_waf(files):
     return output
 
 
-def extract(harvest_source) -> list:
+def extract(harvest_source: dict, waf_options: dict = {}) -> list:
     """Extracts all records from a harvest_source"""
     logger.info("Hello from harvester.extract()")
 
     datasets = []
 
-    # stub
+    if harvest_source.source_type == "dcatus":
+        datasets += download_dcatus_catalog(harvest_source.url)["dataset"]
+    elif harvest_source.source_type == "waf":
+        files = traverse_waf(harvest_source.url, **waf_options)
+        datasets += [f["content"] for f in download_waf(files)]
+    else:  # whatever else we need?
+        pass
 
     return datasets
