@@ -32,8 +32,8 @@ jobs:
         run: poetry install --no-interaction --no-root
       - name: Run Load Test
         env:
-            SRC_TITLE: 'Load Test: EPA ScienceHub'
-            SRC_URL: 'https://pasteur.epa.gov/metadata.json'
+            SRC_TITLE: 'Load Test NIST'
+            SRC_URL: 'https://www.nist.gov/sites/default/files/data.json'
             SRC_OWNER_ORG: 'b9bfa457-9f66-4aab-861a-ceac5b53ad6d'
             SRC_SOURCE_TYPE: 'datajson'
             CKAN_URL: ${{secrets.CKAN_URL_STAGING}}
