@@ -570,10 +570,9 @@ class Record:
     def simple_transform(self, metadata: dict) -> dict:
         output = {
             # "name": "-".join(str(metadata["title"]).lower().replace(".", "").split()),
-            # "name": "".join([s for s in str(metadata["title"]).lower() if s.isalnum()])[
-            #     :99
-            # ],  # TODO: need to add the random character suffix thing
-            "title": metadata["title"],
+            "name": "".join([s for s in str(metadata["title"]).lower() if s.isalnum()])[
+                :99
+            ],  # TODO: need to add the random character suffix thing
             "owner_org": self.harvest_source.owner_org,
             "identifier": metadata["identifier"],
             "author": None,  # TODO: CHANGE THIS!
