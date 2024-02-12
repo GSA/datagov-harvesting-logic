@@ -43,8 +43,8 @@ session = requests.Session()
 session.request = functools.partial(session.request, timeout=15)
 
 ckan = ckanapi.RemoteCKAN(
-    os.getenv("CKAN_URL_STAGE"),
-    apikey=os.getenv("CKAN_API_TOKEN_STAGE"),
+    os.getenv("CKAN_URL"),
+    apikey=os.getenv("CKAN_API_TOKEN"),
     session=session,
 )
 
