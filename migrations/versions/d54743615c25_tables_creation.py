@@ -28,7 +28,9 @@ def upgrade():
     sa.Column('source_type', sa.String(), nullable=False),
     sa.Column('harvest_source_id', sa.String(), nullable=True),
     sa.Column('harvest_source_name', sa.String(), nullable=True),
-    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
+    sa.Column('id', sa.UUID(),
+              server_default=sa.text('gen_random_uuid()'),
+              nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('harvest_job',
@@ -40,7 +42,9 @@ def upgrade():
     sa.Column('records_deleted', sa.Integer(), nullable=True),
     sa.Column('records_errored', sa.Integer(), nullable=True),
     sa.Column('records_ignored', sa.Integer(), nullable=True),
-    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
+    sa.Column('id', sa.UUID(),
+              server_default=sa.text('gen_random_uuid()'),
+              nullable=False),
     sa.ForeignKeyConstraint(['harvest_source_id'], ['harvest_source.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -52,7 +56,9 @@ def upgrade():
     sa.Column('type', sa.String(), nullable=True),
     sa.Column('severity', sa.String(), nullable=True),
     sa.Column('message', sa.String(), nullable=True),
-    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
+    sa.Column('id', sa.UUID(),
+              server_default=sa.text('gen_random_uuid()'),
+              nullable=False),
     sa.ForeignKeyConstraint(['harvest_job_id'], ['harvest_job.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

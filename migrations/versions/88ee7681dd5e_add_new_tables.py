@@ -21,7 +21,9 @@ def upgrade():
     op.create_table('organization',
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('logo', sa.String(), nullable=True),
-    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
+    sa.Column('id', sa.UUID(),
+              server_default=sa.text('gen_random_uuid()'),
+              nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('harvest_record',
@@ -36,7 +38,9 @@ def upgrade():
     sa.Column('author_email', sa.String(), nullable=True),
     sa.Column('maintainer', sa.String(), nullable=True),
     sa.Column('maintainer_email', sa.String(), nullable=True),
-    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
+    sa.Column('id', sa.UUID(),
+              server_default=sa.text('gen_random_uuid()'),
+              nullable=False),
     sa.ForeignKeyConstraint(['job_id'], ['harvest_job.id'], ),
     sa.ForeignKeyConstraint(['owner_org'], ['organization.id'], ),
     sa.PrimaryKeyConstraint('id')
