@@ -75,5 +75,4 @@ def get_harvest_error(error_id):
         return "provide error_id"
 
 def register_routes(app):
-    # app.register_blueprint(mod, url_prefix='/api')
     app.register_blueprint(mod)
