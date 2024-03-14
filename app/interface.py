@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker, scoped_session
-from harvester.database.models import HarvestSource, HarvestJob, HarvestError
+from app.models import HarvestSource, HarvestJob, HarvestError
 from . import DATABASE_URI
 
 class HarvesterDBInterface:
