@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
 from sqlalchemy.sql import text
+from sqlalchemy import Enum
 
 db = SQLAlchemy()
 
@@ -15,9 +16,11 @@ class HarvestSource(Base):
     
     name = db.Column(db.String, nullable=False)
     notification_emails = db.Column(ARRAY(db.String))
-    organization_id = db.Column(db.String, nullable=False)
+    organization_id = db.Column(db.String,
+                                db.ForeignKey('organization.id'),
+                                nullable=False, index=True)
     frequency = db.Column(db.String, nullable=False)
-    url = db.Column(db.String, nullable=False)
+    url = db.Column(db.String, nullable=False, unique=True)
     schema_type = db.Column(db.String, nullable=False)
     source_type = db.Column(db.String, nullable=False)
     harvest_source_id = db.Column(db.String)
@@ -30,7 +33,10 @@ class HarvestJob(Base):
     harvest_source_id = db.Column(UUID(as_uuid=True),
                                   db.ForeignKey('harvest_source.id'),
                                   nullable=False)
-    date_created = db.Column(db.DateTime)
+    date_created = db.Column(db.DateTime, index=True)
+    status = db.Column(Enum('new', 'in_progress', 'complete', name='job_status'),
+                       nullable=False,
+                       index=True)
     date_finished = db.Column(db.DateTime)
     records_added = db.Column(db.Integer)
     records_updated = db.Column(db.Integer)
@@ -49,7 +55,7 @@ class HarvestError(Base):
     record_reported_id = db.Column(db.String)
     date_created = db.Column(db.DateTime)
     type = db.Column(db.String)
-    severity = db.Column(db.String)
+    severity = db.Column(Enum('CRITICAL', 'ERROR', 'WARN', name='error_serverity'))
     message = db.Column(db.String)
 
 class Organization(Base):
@@ -65,7 +71,7 @@ class HarvestRecord(Base):
                        db.ForeignKey('harvest_job.id'),
                        nullable=False) 
     identifier = db.Column(db.String(), nullable=False)
-    ckan_id = db.Column(db.String(), nullable=False)
+    ckan_id = db.Column(db.String(), nullable=False, index=True)
     type = db.Column(db.String(), nullable=False)
     source_metadata = db.Column(db.String(), nullable=True)
     name = db.Column(db.String(), nullable=False)
@@ -76,3 +82,12 @@ class HarvestRecord(Base):
     author_email = db.Column(db.String(), nullable=True)
     maintainer = db.Column(db.String(), nullable=True)
     maintainer_email = db.Column(db.String(), nullable=True)
+    notes = db.Column(db.String(), nullable=True)
+    title = db.Column(db.String(), nullable=True)
+    resources = db.Column(JSONB, nullable=True)
+    url = db.Column(db.String(), nullable=False)
+    tags = db.Column(ARRAY(db.String()), nullable=True)
+    extras = db.Column(JSONB, nullable=True)
+    key = db.Column(db.String(), nullable=True)
+    value = db.Column(db.String(), nullable=True)
+    source_metadata_url = db.Column(db.String(), nullable=True)
