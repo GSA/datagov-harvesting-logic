@@ -1,6 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.sql import text
+from sqlalchemy import Enum
+from sqlalchemy.schema import Index
 
 db = SQLAlchemy()
 
@@ -9,19 +11,24 @@ class Base(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True,
                    server_default=text("gen_random_uuid()"))
 
+class Organization(Base):
+    __tablename__ = 'organization'
+    
+    name = db.Column(db.String(), nullable=False, index=True)
+    logo = db.Column(db.String())
 
 class HarvestSource(Base):
     __tablename__ = 'harvest_source'
     
     name = db.Column(db.String, nullable=False)
     notification_emails = db.Column(ARRAY(db.String))
-    organization_id = db.Column(db.String, nullable=False)
+    organization_id = db.Column(UUID(as_uuid=True),
+                                db.ForeignKey('organization.id'),
+                                nullable=False)
     frequency = db.Column(db.String, nullable=False)
-    url = db.Column(db.String, nullable=False)
+    url = db.Column(db.String, nullable=False, unique=True)
     schema_type = db.Column(db.String, nullable=False)
     source_type = db.Column(db.String, nullable=False)
-    harvest_source_id = db.Column(db.String)
-    harvest_source_name = db.Column(db.String)
     jobs = db.relationship('HarvestJob', backref='source')
 
 class HarvestJob(Base):
@@ -30,7 +37,10 @@ class HarvestJob(Base):
     harvest_source_id = db.Column(UUID(as_uuid=True),
                                   db.ForeignKey('harvest_source.id'),
                                   nullable=False)
-    date_created = db.Column(db.DateTime)
+    status = db.Column(Enum('new', 'in_progress', 'complete', name='job_status'),
+                       nullable=False,
+                       index=True)
+    date_created = db.Column(db.DateTime, index=True)
     date_finished = db.Column(db.DateTime)
     records_added = db.Column(db.Integer)
     records_updated = db.Column(db.Integer)
@@ -45,18 +55,15 @@ class HarvestError(Base):
     harvest_job_id = db.Column(UUID(as_uuid=True),
                                db.ForeignKey('harvest_job.id'),
                                nullable=False)
-    record_id = db.Column(db.String, nullable=True)
-    record_reported_id = db.Column(db.String)
+    harvest_record_id = db.Column(UUID(as_uuid=True),
+                                  db.ForeignKey('harvest_record.id'),
+                                  nullable=True)
     date_created = db.Column(db.DateTime)
     type = db.Column(db.String)
-    severity = db.Column(db.String)
+    severity = db.Column(Enum('CRITICAL', 'ERROR', 'WARN', name='error_serverity'),
+                         nullable=False,
+                         index=True)
     message = db.Column(db.String)
-
-class Organization(Base):
-    __tablename__ = 'organization'
-    
-    name = db.Column(db.String(), nullable=False)
-    logo = db.Column(db.String(), nullable=True)
 
 class HarvestRecord(Base):
     __tablename__ = 'harvest_record'
@@ -65,14 +72,9 @@ class HarvestRecord(Base):
                        db.ForeignKey('harvest_job.id'),
                        nullable=False) 
     identifier = db.Column(db.String(), nullable=False)
-    ckan_id = db.Column(db.String(), nullable=False)
+    ckan_id = db.Column(db.String(), nullable=False, index=True)
     type = db.Column(db.String(), nullable=False)
     source_metadata = db.Column(db.String(), nullable=True)
-    name = db.Column(db.String(), nullable=False)
-    owner_org = db.Column(UUID(as_uuid=True),
-                          db.ForeignKey('organization.id'),
-                          nullable=False)
-    author = db.Column(db.String(), nullable=True)
-    author_email = db.Column(db.String(), nullable=True)
-    maintainer = db.Column(db.String(), nullable=True)
-    maintainer_email = db.Column(db.String(), nullable=True)
+    __table_args__ = (
+        Index('ix_job_id_identifier', 'job_id', 'identifier'),
+    )
