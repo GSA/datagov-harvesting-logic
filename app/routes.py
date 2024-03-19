@@ -1,6 +1,6 @@
 from flask import Blueprint, request, render_template
 from .interface import HarvesterDBInterface
-from tests.database.data import new_source, new_job, new_error
+from tests.database.data import new_org, new_source, new_job, new_error
 
 mod = Blueprint('harvest', __name__)
 db = HarvesterDBInterface()
@@ -9,10 +9,19 @@ db = HarvesterDBInterface()
 def index():
     return render_template('index.html')
 
+@mod.route('/add_org', methods=['POST', 'GET'])
+def add_organization():
+    org=db.add_organization(new_org)
+    return(f"Added new organization with ID: {org.id}")
+
 @mod.route('/add_source', methods=['POST', 'GET'])
 def add_harvest_source():
-    source=db.add_harvest_source(new_source)
-    return(f"Added new source with ID: {source.id}")
+    org_id = request.args.get('org_id', None)
+    if org_id is None:
+        return 'Please provide org_id: /add_source?org_id=xxx'
+    else:
+        source=db.add_harvest_source(new_source, org_id)
+        return(f"Added new source with ID: {source.id}")
 
 @mod.route('/add_job', methods=['POST', 'GET'])
 def add_harvest_job():
@@ -31,7 +40,12 @@ def add_harvest_error():
     else:
         err=db.add_harvest_error(new_error, job_id)
         return(f"Added new error with ID: {err.id}")
-    
+
+@mod.route('/organizations', methods=['GET'])
+def get_all_organizations():
+    result = db.get_all_organizations()
+    return result
+   
 @mod.route('/harvest_sources', methods=['GET'])
 def get_all_harvest_sources():
     result = db.get_all_harvest_sources()

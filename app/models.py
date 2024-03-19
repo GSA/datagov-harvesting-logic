@@ -22,15 +22,13 @@ class HarvestSource(Base):
     
     name = db.Column(db.String, nullable=False)
     notification_emails = db.Column(ARRAY(db.String))
-    organization_id = db.Column(db.String,
+    organization_id = db.Column(UUID(as_uuid=True),
                                 db.ForeignKey('organization.id'),
                                 nullable=False)
     frequency = db.Column(db.String, nullable=False)
     url = db.Column(db.String, nullable=False, unique=True)
     schema_type = db.Column(db.String, nullable=False)
     source_type = db.Column(db.String, nullable=False)
-    harvest_source_id = db.Column(db.String)
-    harvest_source_name = db.Column (db.String)
     jobs = db.relationship('HarvestJob', backref='source')
 
 class HarvestJob(Base):
@@ -57,10 +55,9 @@ class HarvestError(Base):
     harvest_job_id = db.Column(UUID(as_uuid=True),
                                db.ForeignKey('harvest_job.id'),
                                nullable=False)
-    harvest_record_id = db.Column(db.String,
+    harvest_record_id = db.Column(UUID(as_uuid=True),
                                   db.ForeignKey('harvest_record.id'),
                                   nullable=True)
-    record_reported_id = db.Column(db.String)
     date_created = db.Column(db.DateTime)
     type = db.Column(db.String)
     severity = db.Column(Enum('CRITICAL', 'ERROR', 'WARN', name='error_serverity'),

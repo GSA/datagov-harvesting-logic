@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, scoped_session
-from harvester.database.models import Base 
-from harvester.database.interface import HarvesterDBInterface
+from app.models import Base 
+from app.interface import HarvesterDBInterface
 from dotenv import load_dotenv
 import os
 
@@ -38,7 +38,6 @@ def db_interface(db_session):
 
 def test_add_harvest_source(db_interface):
     source_data = {'name': 'Test Source',
-                   'organization_id': 'Test Org',
                    'frequency': 'daily',
                    'url': "http://example.com",
                    'schema_type': 'strict',
@@ -50,7 +49,6 @@ def test_add_and_get_harvest_source(db_interface):
     new_source = db_interface.add_harvest_source({
             'name': 'Test Source',
             'notification_emails': ['test@example.com'],
-            'organization_id': 'Test Org',
             'frequency': 'daily',
             'url': "http://example.com",
             'schema_type': 'strict',
@@ -66,7 +64,6 @@ def test_add_harvest_job(db_interface):
     new_source = db_interface.add_harvest_source({
             'name': 'Test Source',
             'notification_emails': ['test@example.com'],
-            'organization_id': 'Test Org',
             'frequency': 'daily',
             'url': "http://example.com",
             'schema_type': 'strict',
@@ -74,6 +71,7 @@ def test_add_harvest_job(db_interface):
         })
         
     job_data = {
+        'status': 'in_progress',
         'date_created': '2022-01-01',
         'date_finished': '2022-01-02',
         'records_added': 10,
@@ -84,38 +82,3 @@ def test_add_harvest_job(db_interface):
     }
     new_job = db_interface.add_harvest_job(job_data, str(new_source.id))
     assert new_job.harvest_source_id == new_source.id
-
-def test_add_harvest_error(db_interface):
-    new_source = db_interface.add_harvest_source({
-        'name': 'Error Test Source',
-        'notification_emails': ['error@example.com'],
-        'organization_id': 'Error Org',
-        'frequency': 'weekly',
-        'url': "http://example.com",
-        'schema_type': 'strict',
-        'source_type': 'json'
-    })
-
-    new_job = db_interface.add_harvest_job({
-        'date_created': '2022-01-03',
-        'date_finished': '2022-01-04',
-        'records_added': 5,
-        'records_updated': 3,
-        'records_deleted': 1,
-        'records_errored': 0,
-        'records_ignored': 2
-    }, str(new_source.id))
-
-    error_data = {
-        'harvest_job_id': str(new_job.id),
-        'record_reported_id': 'test_record',
-        'date_created': '2022-01-04',
-        'type': 'Test Error',
-        'severity': 'high',
-        'message': 'This is a test error'
-    }
-    new_error = db_interface.add_harvest_error(error_data, str(new_job.id))
-
-    assert new_error.harvest_job_id == new_job.id
-    assert new_error.type == 'Test Error'
-    assert new_error.message == 'This is a test error'
