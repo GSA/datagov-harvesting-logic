@@ -27,33 +27,38 @@ def db_session():
     yield session
 
     session.remove()
-    engine.dispose()
 
     with engine.begin() as connection:
         connection.execute(text(f"DROP SCHEMA IF EXISTS {TEST_SCHEMA} CASCADE;"))
+
+    engine.dispose()
 
 @pytest.fixture(scope='session')
 def db_interface(db_session):
     return HarvesterDBInterface(db_session)
 
 def test_add_harvest_source(db_interface):
+    org_data = db_interface.add_organization({'name': 'GSA',
+                'logo': 'url for the logo'})
     source_data = {'name': 'Test Source',
                    'frequency': 'daily',
-                   'url': "http://example.com",
+                   'url': "http://example-1.com",
                    'schema_type': 'strict',
                    'source_type': 'json'}
-    new_source = db_interface.add_harvest_source(source_data)
+    new_source = db_interface.add_harvest_source(source_data, str(org_data.id))
     assert new_source.name == 'Test Source'
 
 def test_add_and_get_harvest_source(db_interface):
+    org_data = db_interface.add_organization({'name': 'GSA',
+            'logo': 'url for the logo'})
     new_source = db_interface.add_harvest_source({
             'name': 'Test Source',
             'notification_emails': ['test@example.com'],
             'frequency': 'daily',
-            'url': "http://example.com",
+            'url': "http://example-2.com",
             'schema_type': 'strict',
             'source_type': 'json'
-    })
+    }, str(org_data.id))
     assert new_source.name == 'Test Source' 
    
     sources = db_interface.get_all_harvest_sources()
@@ -61,14 +66,16 @@ def test_add_and_get_harvest_source(db_interface):
 
 
 def test_add_harvest_job(db_interface):
+    org_data = db_interface.add_organization({'name': 'GSA',
+                'logo': 'url for the logo'})
     new_source = db_interface.add_harvest_source({
             'name': 'Test Source',
             'notification_emails': ['test@example.com'],
             'frequency': 'daily',
-            'url': "http://example.com",
+            'url': "http://example-3.com",
             'schema_type': 'strict',
             'source_type': 'json'
-        })
+    }, str(org_data.id))
         
     job_data = {
         'status': 'in_progress',

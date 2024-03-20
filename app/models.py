@@ -55,9 +55,11 @@ class HarvestError(Base):
     harvest_job_id = db.Column(UUID(as_uuid=True),
                                db.ForeignKey('harvest_job.id'),
                                nullable=False)
-    harvest_record_id = db.Column(UUID(as_uuid=True),
-                                  db.ForeignKey('harvest_record.id'),
-                                  nullable=True)
+    harvest_record_id = db.Column(db.String)
+    # to-do 
+    # harvest_record_id = db.Column(UUID(as_uuid=True),
+    #                               db.ForeignKey('harvest_record.id'),
+    #                               nullable=True)
     date_created = db.Column(db.DateTime)
     type = db.Column(db.String)
     severity = db.Column(Enum('CRITICAL', 'ERROR', 'WARN', name='error_serverity'),

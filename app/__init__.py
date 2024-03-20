@@ -2,6 +2,9 @@ from flask import Flask
 from .models import db
 from flask_migrate import Migrate
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 DATABASE_URI = os.getenv('DATABASE_URI')
 
