@@ -1,13 +1,13 @@
 # Title
 
-- Status: In Progress
+- Status: Accepted
 - Impact: High
 - Driver: Tyler Burton
 - Approver: Hyon Kim
 - Contributors: Datagov Team
 - Informed: TTS Leadership
-- Date: TBD
-- Tags: executor, airflow
+- Date: 2024-01-16
+- Tags: executor, infrastructure
 - Outcome: TBD
 
 Technical Story: [TICKET]()

@@ -6,13 +6,9 @@
 - Approver: Hyon Kim
 - Contributors: Datagov Team
 - Informed: TTS Leadership
-- Date: 2023-11-28
+- Date: 2024-01-16
 - Tags: infrastructure, orchestration
-- Outcome: Airflow
-
-Technical Stories:
-- https://github.com/GSA/data.gov/issues/4511
-- https://github.com/GSA/data.gov/issues/4539
+- Outcome: Python Flask App
 
 ## Context and Problem Statement
 
@@ -28,6 +24,7 @@ In order to construct an ELT pipeline, an orchestration framework must be chosen
 - Lambda & SQS on AWS([spike](https://github.com/GSA/data.gov/issues/4216))
 - AWS Glue([spike](https://github.com/GSA/data.gov/issues/4279))
 - Airflow([spike1](https://github.com/GSA/data.gov/issues/4422), [spike2](https://github.com/GSA/data.gov/issues/4434))
+- ETL Pipeline with Flask
 
 ## Pros and Cons of the Options
 
@@ -87,6 +84,21 @@ Pros:
 Cons:
 
 - KubernetesExecutor requires Amazon EKS, which is not supported by Cloud.gov, however CeleryExecutor/LocalExeuctor can both live fully within Cloud.gov
+
+### Python Flask
+
+Pros:
+
+- Uses technologies we already know
+- Lightweight
+- Requires only Python knowledge
+- Allows team to iterate to develop MVP after launch
+
+Cons:
+
+- Self-managed
+- 
+
 
 ## Decision
 
