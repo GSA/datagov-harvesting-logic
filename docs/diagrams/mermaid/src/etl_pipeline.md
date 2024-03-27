@@ -19,9 +19,9 @@ sequenceDiagram
     note over DHL: EXTRACT
     DHL->>DHL: Fetch source from <<source_url>>
     DHL->>+HDB: Fetch records from db
-    HDB->>+DHL: Return active records<br>with corresponding <<harvest_source_id>>
+    HDB-->>-DHL: Return active records<br>with corresponding <<harvest_source_id>>
     note over DHL: COMPARE
-    loop HASH source & COMPARE with active records' <<source_hash>>
+    loop hash source record and COMPARE with active records' <<source_hash>>
     note over DHL: LIFO Set of records with status "create" or "update"<br>guarantees we get the most recent record
         DHL->>DHL: Generate lists to Create/Update/Delete
     end
@@ -42,14 +42,14 @@ sequenceDiagram
     loop VALIDATE items to create/update
         DHL->>DHL: Validate against schema
     end
-    DHL-->>HDB: Log any validation failures as harvest_error<br>with type: validation
+    DHL-->>HDB: Log any validation failures as harvest_error<br>with type: validation<br>? also update harvest_record status
     note over DHL: SYNC
     loop SYNC items to create/update
         DHL->>CKAN: CKAN package_create(Identifier)
     end
-    DHL-->>HDB: Log any sync failures as harvest_error<br>with type: sync
+    DHL-->>HDB: Log any sync failures as harvest_error<br>with type: sync<br>? also update harvest_record status
     note over DHL: POST-PROCESSING
-    DHL->>HDB: POST job metrics to harvest_job table (jobId)
+    DHL->>HDB: POST job metrics to harvest_job table (jobId)<br>? or do we rely on harvest_record table and filter by harvest_job_id
     DHL-)FA: Trigger email /api/report (jobId)
     FA->>HDB: Fetch harvest_source (harvest_source_id)
     HDB-->>FA: return <<harvest_source>>
