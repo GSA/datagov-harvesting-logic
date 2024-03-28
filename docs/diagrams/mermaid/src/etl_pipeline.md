@@ -2,8 +2,9 @@
 sequenceDiagram
     autonumber
     actor A as Actor
-    participant FA as Flask App
+    participant HS as Agency<br>Harvest Source
     participant HDB as Harvest DB
+    participant FA as Flask App
     participant DHL as Datagov Harvesting Logic
     participant MD as MDTranslator
     participant S3
@@ -11,29 +12,32 @@ sequenceDiagram
     participant SES
     note over A: TRIGGER HARVEST
     A->>FA: via GH Action,<br>or manual button in Flask app<br>with corresponding <<harvest_source_id>>
-    FA->>HDB: Harvest job created
     note over FA: INVOKE HARVEST JOB
+    FA->>HDB: create harvest_job
     FA->>+DHL: invoke harvest.py<br> with corresponding <<source_id>>
     DHL-->>-FA: returns OK
-    FA->>HDB: write job status: in_progress
+    FA->>HDB: update job_status: in_progress
     note over DHL: EXTRACT
-    DHL->>DHL: Fetch source from <<source_url>>
+    DHL->>+HS: Fetch source from <<source_url>>
+    HS->>-DHL: return source
     DHL->>+HDB: Fetch records from db
-    HDB-->>-DHL: Return active records<br>with corresponding <<harvest_source_id>>
+    HDB-->>-DHL: Return active records<br>with corresponding <<harvest_source_id>><br>filtered by most recent TIMESTAMP
     note over DHL: COMPARE
     loop hash source record and COMPARE with active records' <<source_hash>>
-    note over DHL: LIFO Set of records with status "create" or "update"<br>guarantees we get the most recent record
         DHL->>DHL: Generate lists to Create/Update/Delete
     end
-    rect rgba(0, 0, 255, .1)
+    DHL->>HDB: Write records with status: create, update, delete
     note over DHL: TRANSFORM<br>*for non-dcat sources
     loop items to transform
-        DHL->>MD: MDTransform(dataset)
-        MD-->>DHL: Transformed Item
+        DHL->>+MD: MDTransform(dataset)
+        MD-->>-DHL: Transformed Item
     end
+    note over DHL: PUT TO S3
+    DHL->>S3: write source_metadata to S3
+    rect rgba(255, 0, 0, .1)
+        DHL-->S3:? optionally write transformed DCAT json in case of ISO/CSDGM
     end
-    DHL->>S3: write source_metadata to S3<br>? optionally write transformed DCAT json in case of ISO/CSDGM
-    DHL->>HDB: Write records with status: create, update, delete
+    DHL->>HDB: update harvest_records with source_metadata S3 link
     note over DHL: DELETE
     loop DELETE items to delete
         DHL->>CKAN: CKAN Delete API(Identifier)
@@ -42,15 +46,25 @@ sequenceDiagram
     loop VALIDATE items to create/update
         DHL->>DHL: Validate against schema
     end
-    DHL-->>HDB: Log any validation failures as harvest_error<br>with type: validation<br>? also update harvest_record status
+    DHL-->>HDB: Log any validation failures as harvest_error<br>with type: validation
+    rect rgba(255, 0, 0, .1)
+        DHL-->>HDB: ? also update harvest_record status
+    end
     note over DHL: SYNC
     loop SYNC items to create/update
-        DHL->>CKAN: CKAN package_create(Identifier)
+        DHL->>CKAN: CKAN package_create or package_update (Identifier)
     end
-    DHL-->>HDB: Log any sync failures as harvest_error<br>with type: sync<br>? also update harvest_record status
-    note over DHL: POST-PROCESSING
-    DHL->>HDB: POST job metrics to harvest_job table (jobId)<br>? or do we rely on harvest_record table and filter by harvest_job_id
+    DHL-->>HDB: Log any sync failures as harvest_error<br>with type: sync
+    rect rgba(255, 0, 0, .1)
+        DHL-->>HDB: ? also update harvest_record status
+    end
+    DHL->>HDB: POST job metrics to harvest_job table (jobId)
+    rect rgba(255, 0, 0, .1)
+        DHL-->>HDB: ? or do we rely on harvest_record table and filter by harvest_job_id
+    end
+    note over DHL: COMPLETE
     DHL-)FA: Trigger email /api/report (jobId)
+    note over FA: POST-PROCESSING
     FA->>HDB: Fetch harvest_source (harvest_source_id)
     HDB-->>FA: return <<harvest_source>>
     FA->>HDB: Fetch harvest_job (job_id)
@@ -58,5 +72,4 @@ sequenceDiagram
     FA->>SES: Email job metrics (jobMetrics, notification_emails)
     FA--)DHL: Return succcess of report
     DHL->>HDB: Update harvest_job with status: complete
-    note over DHL: COMPLETE
 ```
