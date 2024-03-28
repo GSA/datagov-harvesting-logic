@@ -24,7 +24,7 @@ class HarvestCriticalException(Exception):
             "date_created": datetime.utcnow(),
         }
 
-        self.db_interface.add_harvest_error(error_data, self.harvest_job_id)
+        self.db_interface.add_harvest_error(error_data)
         self.logger.critical(self.msg, exc_info=True)
 
 
