@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.exc import NoResultFound, IntegrityError
+from sqlalchemy.exc import NoResultFound
 from app.models import Organization, HarvestSource, HarvestJob, HarvestError
 from . import DATABASE_URI
 
@@ -50,7 +50,7 @@ class HarvesterDBInterface:
                 if hasattr(org, key):
                     setattr(org, key, value)
                 else:
-                    print(f"Warning: Trying to update non-existing field '{key}' in organization")
+                    print(f"Warning: non-existing field '{key}' in organization")
 
             self.db.commit()
             return self._to_dict(org)
@@ -104,7 +104,7 @@ class HarvesterDBInterface:
                 if hasattr(source, key):
                     setattr(source, key, value)
                 else:
-                    print(f"Warning: Trying to update non-existing field '{key}' in HarvestSource")
+                    print(f"Warning: non-existing field '{key}' in HarvestSource")
 
             self.db.commit()
             return self._to_dict(source)
@@ -158,7 +158,7 @@ class HarvesterDBInterface:
                 if hasattr(job, key):
                     setattr(job, key, value)
                 else:
-                    print(f"Warning: Trying to update non-existing field '{key}' in HavestJob")
+                    print(f"Warning: non-existing field '{key}' in HavestJob")
 
             self.db.commit()
             return self._to_dict(job)
