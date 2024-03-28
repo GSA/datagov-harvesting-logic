@@ -32,6 +32,10 @@ sequenceDiagram
         DHL->>+MD: MDTransform(dataset)
         MD-->>-DHL: Transformed Item
     end
+    DHL-->>HDB: Log any transform failures as harvest_error<br>with type: transform
+    rect rgba(255, 0, 0, .1)
+        DHL-->>HDB: ? also update harvest_record status
+    end       
     note over DHL: PUT TO S3
     DHL->>S3: write source_metadata to S3
     rect rgba(255, 0, 0, .1)
@@ -42,6 +46,10 @@ sequenceDiagram
     loop DELETE items to delete
         DHL->>CKAN: CKAN Delete API(Identifier)
     end
+    DHL-->>HDB: Log any deletion failures as harvest_error<br>with type: deletion
+    rect rgba(255, 0, 0, .1)
+        DHL-->>HDB: ? also update harvest_record status
+    end    
     note over DHL: VALIDATE
     loop VALIDATE items to create/update
         DHL->>DHL: Validate against schema
