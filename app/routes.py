@@ -117,6 +117,15 @@ def delete_organization(org_id):
 
 
 ## Harvest Source
+@mod.route("/harvest_sources", methods=["GET"])
+def get_harvest_sources():
+    sources = db.get_all_harvest_sources()
+    print(sources)
+    return render_template(
+        "view_table_data.html", data=sources, data_type="Harvest Sources"
+    )
+
+
 @mod.route("/harvest_source/add", methods=["POST", "GET"])
 def add_harvest_source():
     form = HarvestSourceForm()
