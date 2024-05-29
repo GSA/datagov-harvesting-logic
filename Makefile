@@ -28,12 +28,16 @@ test-unit: ## Runs unit tests. Compatible with dev environment / `make up`
 test-integration: ## Runs integration tests. Compatible with dev environment / `make up`
 	poetry run pytest --junitxml=pytest.xml --cov=harvester ./tests/integration
 
+test-functional: ## Runs integration tests. Compatible with dev environment / `make up`
+	poetry run pytest --noconftest --junitxml=pytest.xml --cov=harvester ./tests/functional
+
 test: up test-unit test-integration ## Runs all tests. Compatible with dev environment / `make up`
 
 test-ci: ## Runs all tests using only db and required test resources. NOT compatible with dev environment / `make up`
 	docker-compose up -d db nginx-harvest-source
 	make test-unit
 	make test-integration
+	make test-functional
 	make down
 
 up: ## Sets up local flask and harvest runner docker environments. harvest runner gets DATABASE_PORT from .env
@@ -47,8 +51,9 @@ down: ## Tears down the flask and harvester containers
 up-debug: ## Sets up local docker environment
 	docker compose -f docker-compose.yml -f docker-compose_debug.yml up -d
 
-clean: down ## Cleans docker images
+clean: ## Cleans docker images
 	docker compose down -v --remove-orphans
+	docker compose -p harvest-app down -v --remove-orphans
 
 lint:  ## Lints wtih ruff, isort, black
 	ruff .
