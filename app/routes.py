@@ -1,10 +1,111 @@
-from flask import Blueprint, flash, jsonify, redirect, render_template, request
-
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for, session
+from functools import wraps
+import secrets
+import requests
+import jwt
+import uuid
+import time
 from .forms import HarvestSourceForm, OrganizationForm
 from database.interface import HarvesterDBInterface
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.backends import default_backend
 
 mod = Blueprint("harvest", __name__)
 db = HarvesterDBInterface()
+
+CLIENT_ID = 'urn:gov:gsa:openidconnect.profiles:sp:sso:jin-org:jin-app'
+REDIRECT_URI = 'http://localhost:8080/oidc_callback'
+AUTH_URL = 'https://idp.int.identitysandbox.gov/openid_connect/authorize'
+TOKEN_URL = 'https://idp.int.identitysandbox.gov/api/openid_connect/token'
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user' not in session:
+            session['next'] = request.url
+            return redirect(url_for('harvest.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def create_client_assertion():
+    with open('app/private.pem', 'rb') as key_file:
+        private_key_data = key_file.read()
+        private_key = load_pem_private_key(private_key_data, password=None, backend=default_backend())
+
+    now = int(time.time())
+    payload = {
+        'iss': CLIENT_ID,
+        'sub': CLIENT_ID,
+        'aud': TOKEN_URL,
+        'jti': uuid.uuid4().hex,
+        # 'exp': now + 300,  # Token is valid for 5 minutes
+        'exp': now + 10,  # Token is valid for 10 seconds for testing
+        'iat': now
+    }
+
+    return jwt.encode(payload, private_key, algorithm='RS256')
+
+@mod.route('/login')
+def login():
+    state = secrets.token_urlsafe(32)
+    nonce = secrets.token_urlsafe(32)
+    session['state'] = state
+    session['nonce'] = nonce
+
+    auth_request_url = (
+        f"{AUTH_URL}?response_type=code"
+        f"&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URI}"
+        f"&scope=openid email"
+        f"&state={state}"
+        f"&nonce={nonce}"
+        f"&acr_values=http://idmanagement.gov/ns/assurance/loa/1"
+    )
+    return redirect(auth_request_url)
+
+@mod.route('/oidc_callback')
+def callback():
+    code = request.args.get('code')
+    state = request.args.get('state')
+
+    if state != session.pop('state', None):
+        return 'State mismatch error', 400
+
+    client_assertion = create_client_assertion()
+    token_payload = {
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': REDIRECT_URI,
+        'client_id': CLIENT_ID,
+        'client_assertion_type': 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        'client_assertion': client_assertion
+    }
+
+    response = requests.post(TOKEN_URL, data=token_payload)
+
+    if response.status_code != 200:
+        return 'Failed to fetch access token', 400
+
+    token_data = response.json()
+    id_token = token_data.get('id_token')  # This is a JWT
+
+    decoded_id_token = jwt.decode(id_token, options={"verify_signature": False})
+
+    session['user'] = decoded_id_token['email'] 
+
+    # Redirect to the original URL or profile page
+    next_url = session.pop('next', None)
+    if next_url:
+        return redirect(next_url)
+    return redirect(url_for('harvest.profile'))
+
+@mod.route('/profile')
+def profile():
+    user_id = session.get('user')
+    if not user_id:
+        return redirect(url_for('login'))
+    return 'Profile page for user {}'.format(user_id)
 
 
 # Helper Functions
@@ -33,6 +134,7 @@ def index():
 
 ## Organizations
 @mod.route("/organization/add", methods=["POST", "GET"])
+@login_required
 def add_organization():
     form = OrganizationForm()
     if request.is_json:
@@ -78,6 +180,7 @@ def get_organization(org_id=None):
 
 
 @mod.route("/organization/edit/<org_id>", methods=["GET", "POST"])
+@login_required
 def edit_organization(org_id=None):
     if org_id:
         org = db.get_organization(org_id)
@@ -103,6 +206,7 @@ def edit_organization(org_id=None):
 
 
 @mod.route("/organization/delete/<org_id>", methods=["POST"])
+@login_required
 def delete_organization(org_id):
     try:
         result = db.delete_organization(org_id)
@@ -118,6 +222,7 @@ def delete_organization(org_id):
 
 ## Harvest Source
 @mod.route("/harvest_source/add", methods=["POST", "GET"])
+@login_required
 def add_harvest_source():
     form = HarvestSourceForm()
     organizations = db.get_all_organizations()
@@ -168,6 +273,7 @@ def get_harvest_source(source_id=None):
 
 
 @mod.route("/harvest_source/edit/<source_id>", methods=["GET", "POST"])
+@login_required
 def edit_harvest_source(source_id=None):
     if source_id:
         source = db.get_harvest_source(source_id)
@@ -217,6 +323,7 @@ def trigger_harvest_source(source_id):
 
 
 @mod.route("/harvest_source/delete/<source_id>", methods=["POST"])
+@login_required
 def delete_harvest_source(source_id):
     try:
         result = db.delete_harvest_source(source_id)
