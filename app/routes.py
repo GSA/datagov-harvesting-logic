@@ -23,8 +23,10 @@ db = HarvesterDBInterface()
 load_dotenv()
 CLIENT_ID = os.getenv("CLIENT_ID")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
-AUTH_URL = os.getenv("AUTH_URL")
-TOKEN_URL = os.getenv("TOKEN_URL")
+ISSUER = os.getenv("ISSUER")
+AUTH_URL = ISSUER + '/openid_connect/authorize'
+TOKEN_URL = ISSUER + '/api/openid_connect/token'
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
