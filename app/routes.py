@@ -5,7 +5,8 @@ import secrets
 import requests
 import jwt
 import uuid
-import os, time
+import os
+import time
 from database.interface import HarvesterDBInterface
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.backends import default_backend

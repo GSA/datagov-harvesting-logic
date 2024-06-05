@@ -2,7 +2,6 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask
-from flask_bootstrap import Bootstrap
 from flask_migrate import Migrate
 
 from app.scripts.load_manager import load_manager
