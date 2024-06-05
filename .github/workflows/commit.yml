@@ -52,7 +52,7 @@ jobs:
         with:
           pytest-coverage-path: pytest-coverage.txt
           junitxml-path: pytest.xml
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ s.GITHUB_TOKEN }}
 
   deploy-development:
     if: github.ref == 'refs/heads/develop'

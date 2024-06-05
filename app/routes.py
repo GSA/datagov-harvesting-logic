@@ -1,26 +1,30 @@
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for, session
+from flask import Blueprint, flash, jsonify, redirect, render_template, \
+                  request, url_for, session
 from functools import wraps
 import secrets
 import requests
 import jwt
 import uuid
-import time
-from .forms import HarvestSourceForm, OrganizationForm
+import os, time
 from database.interface import HarvesterDBInterface
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.backends import default_backend
+from dotenv import load_dotenv
+import click
 
 from .forms import HarvestSourceForm, OrganizationForm
 
+user = Blueprint("user", __name__)
 mod = Blueprint("harvest", __name__)
 db = HarvesterDBInterface()
 
-CLIENT_ID = 'urn:gov:gsa:openidconnect.profiles:sp:sso:jin-org:jin-app'
-REDIRECT_URI = 'http://localhost:8080/oidc_callback'
-AUTH_URL = 'https://idp.int.identitysandbox.gov/openid_connect/authorize'
-TOKEN_URL = 'https://idp.int.identitysandbox.gov/api/openid_connect/token'
 
-
+# Login authentication
+load_dotenv()
+CLIENT_ID = os.getenv("CLIENT_ID")
+REDIRECT_URI = os.getenv("REDIRECT_URI")
+AUTH_URL = os.getenv("AUTH_URL")
+TOKEN_URL = os.getenv("TOKEN_URL")
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -31,9 +35,16 @@ def login_required(f):
     return decorated_function
 
 def create_client_assertion():
-    with open('app/private.pem', 'rb') as key_file:
-        private_key_data = key_file.read()
-        private_key = load_pem_private_key(private_key_data, password=None, backend=default_backend())
+
+    private_key_data = os.getenv("OPENID_PRIVATE_KEY")
+    if not private_key_data:
+        raise ValueError("No private key found in the environment variable")
+
+    private_key = load_pem_private_key(
+        private_key_data.encode("utf-8"),
+        password=None,
+        backend=default_backend()
+    )
 
     now = int(time.time())
     payload = {
@@ -41,8 +52,7 @@ def create_client_assertion():
         'sub': CLIENT_ID,
         'aud': TOKEN_URL,
         'jti': uuid.uuid4().hex,
-        # 'exp': now + 300,  # Token is valid for 5 minutes
-        'exp': now + 10,  # Token is valid for 10 seconds for testing
+        'exp': now + 900,  # Token is valid for 15 minutes
         'iat': now
     }
 
@@ -66,7 +76,12 @@ def login():
     )
     return redirect(auth_request_url)
 
-@mod.route('/oidc_callback')
+@mod.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('harvest.index'))
+
+@mod.route('/callback')
 def callback():
     code = request.args.get('code')
     state = request.args.get('state')
@@ -80,7 +95,8 @@ def callback():
         'code': code,
         'redirect_uri': REDIRECT_URI,
         'client_id': CLIENT_ID,
-        'client_assertion_type': 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        'client_assertion_type': \
+            'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
         'client_assertion': client_assertion
     }
 
@@ -90,24 +106,63 @@ def callback():
         return 'Failed to fetch access token', 400
 
     token_data = response.json()
-    id_token = token_data.get('id_token')  # This is a JWT
+    id_token = token_data.get('id_token')
 
     decoded_id_token = jwt.decode(id_token, options={"verify_signature": False})
 
-    session['user'] = decoded_id_token['email'] 
+    usr_info = {
+        "email": decoded_id_token['email'],
+        "ssoid": decoded_id_token['sub']
+    }
+    usr = db.verify_user(usr_info)
 
-    # Redirect to the original URL or profile page
-    next_url = session.pop('next', None)
-    if next_url:
-        return redirect(next_url)
-    return redirect(url_for('harvest.profile'))
+    if usr:
+        session['user'] = decoded_id_token['email']
+        next_url = session.pop('next', None)
+        if next_url:
+            return redirect(url_for(next_url))
+        else:
+            return redirect(url_for('harvest.index'))
+    else:
+        flash('Please request registration from the admin before proceeding.')
+        return redirect(url_for('harvest.index'))
 
-@mod.route('/profile')
-def profile():
-    user_id = session.get('user')
-    if not user_id:
-        return redirect(url_for('login'))
-    return 'Profile page for user {}'.format(user_id)
+
+# User management
+@user.cli.command('add')
+@click.argument('email')
+@click.option('--name', default='', help='Name of the user')
+def add_user(email, name):
+    """add new user with .gov email."""
+
+    usr_data = {'email': email}
+    if name:
+        usr_data['name'] = name
+
+    success, message = db.add_user(usr_data)
+    if success:
+        print("User added successfully!")
+    else:
+        print("Error:", message)
+
+@user.cli.command('list')
+def list_users():
+    """List all users' emails."""
+    users = db.list_users()
+    if users:
+        for user in users:
+            print(user.email)
+    else:
+        print("No users found.")
+
+@user.cli.command('remove')
+@click.argument('email')
+def remove_user(email):
+    """Remove a user with the given EMAIL."""
+    if db.remove_user(email):
+        print(f"Removed user with email: {email}")
+    else:
+        print("Failed to remove user or user not found.")
 
 
 # Helper Functions
@@ -471,3 +526,4 @@ def get_data_sources():
 
 def register_routes(app):
     app.register_blueprint(mod)
+    app.register_blueprint(user)

@@ -105,3 +105,9 @@ class HarvestRecord(Base):
     type = db.Column(db.String)
     action = db.Column(Enum("create", "update", "delete", name="record_action"))
     status = db.Column(Enum("error", "success", name="record_status"))
+
+class HarvestUser(Base):
+    __tablename__ = 'harvest_user'
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    ssoid = db.Column(db.String(200), unique=True, nullable=True)

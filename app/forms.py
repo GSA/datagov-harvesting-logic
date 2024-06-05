@@ -11,7 +11,7 @@ def validate_email_list(form, field):
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email.strip()):
             raise ValidationError("Invalid email address: {}".format(email))
 
-
+  
 class HarvestSourceForm(FlaskForm):
     organization_id = SelectField(
         "Organization", choices=[], validators=[DataRequired()]

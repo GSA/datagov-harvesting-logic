@@ -10,14 +10,12 @@ from database.models import db
 
 load_dotenv()
 
-
 def create_app():
     app = Flask(__name__, static_url_path="", static_folder="static")
 
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["SECRET_KEY"] = os.urandom(16)  # TODO: pull from env var
-    Bootstrap(app)
+    app.config["SECRET_KEY"] = os.getenv("FLASK_APP_SECRET_KEY")
 
     db.init_app(app)
 
