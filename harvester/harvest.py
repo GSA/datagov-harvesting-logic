@@ -231,7 +231,6 @@ class HarvestSource:
                         "harvest_source_id": record.harvest_source.id,
                         "source_hash": record.metadata_hash,
                         "source_raw": str(record.metadata),
-                        "type": self.source_type,
                         "action": action,
                     }
                 )
@@ -402,7 +401,6 @@ class Record:
         except Exception as e:
             self.validation_msg = str(e)  # TODO: verify this is what we want
             self.valid = False
-            # TODO: do something with 'e' in logger?
             raise ValidationException(
                 repr(e),
                 self.harvest_source.job_id,
@@ -430,7 +428,7 @@ class Record:
             raise DCATUSToCKANException(
                 repr(e),
                 self.harvest_source.job_id,
-                self.harvest_source.name,
+                self.harvest_source.internal_records_lookup_table[self.identifier],
             )
 
     def sync(self) -> None:
@@ -452,7 +450,7 @@ class Record:
             raise SynchronizeException(
                 f"failed to {self.action} for {self.identifier} :: {repr(e)}",
                 self.harvest_source.job_id,
-                self.identifier,
+                self.harvest_source.internal_records_lookup_table[self.identifier],
             )
 
         logger.info(f"time to {self.action} {self.identifier} {datetime.now()-start}")
