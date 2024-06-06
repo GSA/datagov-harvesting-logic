@@ -14,7 +14,5 @@ applications:
       CLIENT_ID: ((CLIENT_ID))
       ISSUER: ((ISSUER))
       REDIRECT_URI: ((REDIRECT_URI))
-      FLASK_APP_SECRET_KEY: ((FLASK_APP_SECRET_KEY))
-      OPENID_PRIVATE_KEY: ((OPENID_PRIVATE_KEY))
       FLASK_APP: run.py
     command: flask run --host=0.0.0.0 --port=8080
